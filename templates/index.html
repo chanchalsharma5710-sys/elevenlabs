@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceCraft AI – Text to Speech Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Phosphor Icons or Lucide (Using Lucide via CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dark-theme">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <i data-lucide="audio-lines" class="logo-icon"></i>
+                <span>VoiceCraft AI</span>
+            </a>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#studio">Studio</a>
+                <a href="#features">Features</a>
+                <a href="#about">About</a>
+            </div>
+            <button class="btn btn-primary" onclick="document.getElementById('studio').scrollIntoView({behavior: 'smooth'})">Open Studio</button>
+        </div>
+    </nav>
+
+    <header id="home" class="hero">
+        <div class="hero-content">
+            <h1>Turn Your Words Into Natural AI Speech.</h1>
+            <p>Create expressive, realistic voiceovers for videos, presentations, podcasts, audiobooks, and educational content with ElevenLabs AI.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="document.getElementById('studio').scrollIntoView({behavior: 'smooth'})">Start Creating</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">Explore Features</button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="waveform-animation">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+    </header>
+
+    <main id="studio" class="studio-section">
+        <div class="studio-container">
+            <div class="studio-left">
+                <div class="panel text-editor-panel">
+                    <div class="panel-header">
+                        <h2>Text Editor</h2>
+                        <div class="editor-actions">
+                            <button class="btn-icon" id="sample-btn" title="Load Sample"><i data-lucide="file-text"></i></button>
+                            <button class="btn-icon" id="clear-btn" title="Clear Text"><i data-lucide="trash-2"></i></button>
+                        </div>
+                    </div>
+                    <textarea id="text-input" placeholder="Enter or paste your text here to transform it into natural speech..."></textarea>
+                    <div class="editor-footer">
+                        <span id="char-count">0 characters</span>
+                        <span id="word-count">0 words</span>
+                    </div>
+                </div>
+                
+                <div class="panel result-panel hidden" id="result-panel">
+                    <h3>Your Generated Narration</h3>
+                    <div class="audio-player-container">
+                        <audio id="audio-player" controls></audio>
+                    </div>
+                    <div class="result-actions">
+                        <a id="download-btn" class="btn btn-secondary" download="voicecraft-narration.mp3"><i data-lucide="download"></i> Download</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="studio-right">
+                <div class="panel settings-panel">
+                    <h2>Voice Selection</h2>
+                    <div class="form-group">
+                        <label for="voice-select">Choose Voice</label>
+                        <select id="voice-select">
+                            <option value="" disabled selected>Loading voices...</option>
+                        </select>
+                        <div id="voice-error" class="error-msg hidden"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-select">Model</label>
+                        <select id="model-select">
+                            <option value="eleven_multilingual_v2" selected>Eleven Multilingual v2 (High Quality)</option>
+                            <option value="eleven_flash_v2_5">Eleven Flash v2.5 (Ultra Fast)</option>
+                            <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Fast & Natural)</option>
+                        </select>
+                    </div>
+
+                    <h2 class="settings-title">Narration Settings</h2>
+                    
+                    <div class="form-group">
+                        <div class="slider-header">
+                            <label for="stability">Stability</label>
+                            <span id="stability-val">0.5</span>
+                        </div>
+                        <input type="range" id="stability" min="0" max="1" step="0.01" value="0.5">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="slider-header">
+                            <label for="similarity">Similarity Boost</label>
+                            <span id="similarity-val">0.75</span>
+                        </div>
+                        <input type="range" id="similarity" min="0" max="1" step="0.01" value="0.75">
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="slider-header">
+                            <label for="style">Style Exaggeration</label>
+                            <span id="style-val">0.0</span>
+                        </div>
+                        <input type="range" id="style" min="0" max="1" step="0.01" value="0">
+                    </div>
+
+                    <div class="form-group toggle-group">
+                        <label for="speaker-boost">Speaker Boost</label>
+                        <label class="switch">
+                            <input type="checkbox" id="speaker-boost" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <button id="generate-btn" class="btn btn-primary btn-generate">
+                        <i data-lucide="audio-lines"></i> Generate Narration
+                    </button>
+                    <div id="generate-loading" class="loading-state hidden">
+                        <div class="spinner"></div>
+                        <span>Creating your AI narration...</span>
+                    </div>
+                    <div id="generate-error" class="error-msg hidden"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section id="features" class="features-section">
+        <div class="features-header">
+            <h2>Powerful Features</h2>
+            <p>Everything you need to create professional voiceovers.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i data-lucide="mic"></i>
+                <h3>Natural AI Voices</h3>
+                <p>Access incredibly lifelike voices that understand context and emotion.</p>
+            </div>
+            <div class="feature-card">
+                <i data-lucide="sliders-horizontal"></i>
+                <h3>Configurable Narration</h3>
+                <p>Adjust stability, similarity, and style to get the perfect delivery.</p>
+            </div>
+            <div class="feature-card">
+                <i data-lucide="download-cloud"></i>
+                <h3>Downloadable Audio</h3>
+                <p>Export high-quality MP3 files instantly for your projects.</p>
+            </div>
+            <div class="feature-card">
+                <i data-lucide="globe"></i>
+                <h3>Multilingual Support</h3>
+                <p>Generate speech in multiple languages with native-sounding accents.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about-section">
+        <div class="about-content">
+            <h2>About VoiceCraft AI</h2>
+            <p>VoiceCraft AI is a text-to-speech application powered by the world-class ElevenLabs API. It provides an intuitive interface for generating realistic human speech for various applications including educational narration, video voiceovers, and storytelling.</p>
+            <p class="disclaimer">Note: Voice availability, language support, and generation limits depend on the configured ElevenLabs account and selected model.</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <i data-lucide="audio-lines"></i>
+                    <span>VoiceCraft AI</span>
+                </div>
+                <p>Transforming text into expressive speech.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#home">Home</a>
+                <a href="#studio">Studio</a>
+                <a href="#features">Features</a>
+                <a href="https://elevenlabs.io/" target="_blank">ElevenLabs API</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 VoiceCraft AI. For educational purposes.</p>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
